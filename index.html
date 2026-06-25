@@ -145,7 +145,6 @@ DATA SUMBER: PROGRESS PPL · SE2026 — DIAMBIL LANGSUNG DARI GOOGLE SHEETS SAAT
 </footer>
 </div>
 <script>
-// ====== KONFIGURASI ======
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXpVwhWEVGDNmGefdCjapaDYWD_b7V_KOdhpdIE2ZB2SzAmxD4u2oplc5rSzOyTGLm-0F-9XBxm8ja/pub?gid=2111234947&single=true&output=csv";
 const CSV_URL_GC = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXpVwhWEVGDNmGefdCjapaDYWD_b7V_KOdhpdIE2ZB2SzAmxD4u2oplc5rSzOyTGLm-0F-9XBxm8ja/pub?gid=611204204&single=true&output=csv";
 const NIP_MAP = {"340019495":"M.TAUFIK R","132311851":"IMA","340015186":"NURUDDIN ZAIN","340015557":"SYAKERANI","340050198":"PRATIWI","340055352":"NOORHAMIMAH","340056117":"FARIDA AMINA","340016618":"DWI SETYO MAYLENA","340056874":"RAISA NOOR MAULIDA","340018139":"JUNAIDI EFENDI","340018823":"M.IQBAL","340055342":"DANY THERESA","340057558":"RISKA FINA AYUNINDA","340058750":"GHITA","340060168":"KHALISTA","340061619":"ADIMA LULUATUN","340063514":"SALMA AFNA H. H","340066120":"ANNISA","340066397":"NASYWA","340012390":"AL AMIN","340065201":"IMRON","340052140":"IRWAN","340065025":"SAFWAN","340016619":"JULIANA ADMAKA","340019091":"LISDA FITRIAWATI","340062842":"HENDRA"};
@@ -159,7 +158,6 @@ const elHint = document.getElementById('hintText');
 const elStatusDot = document.getElementById('statusDot');
 const elStatusText = document.getElementById('statusText');
 const elRefreshBtn = document.getElementById('refreshBtn');
-
 function fmt(n){ if(n===null||n===undefined||isNaN(n)) return '–'; return Number(n).toLocaleString('id-ID',{maximumFractionDigits:0}); }
 function fmtDec(n){ if(n===null||n===undefined||isNaN(n)) return '–'; return Number(n).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtPct(n){ if(n===null||n===undefined||isNaN(n)) return '–'; return Number(n).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; }
@@ -187,7 +185,7 @@ else { inQuotes = false; }
 } else {
 if (ch === '"'){ inQuotes = true; }
 else if (ch === ','){ row.push(field); field=''; }
-else if (ch === '\r'){ /* skip */ }
+else if (ch === '\r'){ }
 else if (ch === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
 else { field += ch; }
 }
@@ -195,9 +193,7 @@ else { field += ch; }
 if (field.length || row.length){ row.push(field); rows.push(row); }
 return rows;
 }
-
 let LAST_UPDATE_TIME = null;
-
 function setStatus(state, text){
 elStatusDot.className = 'status-dot ' + state;
 if (LAST_UPDATE_TIME && state === 'ok') {
@@ -207,7 +203,6 @@ elStatusText.textContent = text + " · diperbarui " + d.toLocaleString('id-ID', 
 elStatusText.textContent = text;
 }
 }
-
 function getUpdateBadge(type='default'){
 if (!LAST_UPDATE_TIME) return '';
 const date = new Date(LAST_UPDATE_TIME);
@@ -225,8 +220,6 @@ const fullDate = date.toLocaleString('id-ID', { day:'2-digit', month:'short', ye
 const typeClass = type === 'tf' ? 'tf-badge' : type === 'pml' ? 'pml-badge' : type === 'ppl' ? 'ppl-badge' : '';
 return `<span class="update-badge ${typeClass}" title="Diperbarui: ${fullDate}">diperbarui ${timeText}</span>`;
 }
-
-// ====== REFRESH BADGE WAKTU BERKALA ======
 function refreshUpdateBadges() {
 if (!LAST_UPDATE_TIME) return;
 const date = new Date(LAST_UPDATE_TIME);
@@ -252,16 +245,12 @@ date.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', 
 }
 }
 setInterval(refreshUpdateBadges, 30000);
-
-// ====== AMBIL DATA SHEET GC ======
 async function loadGCData() {
 try {
 const res = await fetch(CSV_URL_GC + '&_=' + Date.now(), {cache:'no-store'});
 if (!res.ok) throw new Error('HTTP ' + res.status);
 const text = await res.text();
 const grid = parseCSV(text);
-console.log('📊 Sheet GC - total baris:', grid.length);
-if (grid.length > 0) console.log('📊 Sheet GC - baris pertama:', grid[0]);
 let startIdx = 1;
 for (let i = 0; i < Math.min(5, grid.length); i++) {
 if ((grid[i][0] || '').toString().trim().toLowerCase().includes('idsub')) {
@@ -280,15 +269,10 @@ gcMap[idsub] = ketGC;
 }
 }
 console.log('✅ Data GC termuat:', Object.keys(gcMap).length, 'record');
-if (Object.keys(gcMap).length > 0) {
-const sample = Object.entries(gcMap).slice(0, 3);
-console.log('📋 Sample gcMap:', sample);
-}
 } catch (err) {
 console.error('❌ Gagal memuat sheet GC:', err);
 }
 }
-
 async function loadData(){
 setStatus('loading', 'Memuat data terbaru…');
 elInput.disabled = true;
@@ -307,7 +291,7 @@ const kec = (cols[0]||'').trim();
 const tf = (cols[1]||'').trim();
 const pml = (cols[2]||'').trim();
 const ppl = (cols[4]||'').trim();
-// ✅ DIPERBAIKI: Ambil idsubsls dari index 36 (bukan 47)
+// PERBAIKAN: Index 36 bukan 47
 const idsubsls = cols.length > 36 ? String(cols[36] || '').trim() : '';
 if (!pml || !ppl) continue;
 if (/total/i.test(pml)) continue;
@@ -320,38 +304,31 @@ rata: toNum(cols[8]),
 persen: toNum(cols[9]),
 });
 }
-if (rows.length === 0) throw new Error('Data kosong setelah parsing — format CSV mungkin berubah');
+if (rows.length === 0) throw new Error('Data kosong setelah parsing');
 DATA = rows;
 LAST_UPDATE_TIME = Date.now();
 setStatus('ok', 'Data termuat · ' + rows.length.toLocaleString('id-ID') + ' baris PPL');
 elInput.disabled = false;
-elHint.innerHTML = 'Total <b>' + Object.keys(NIP_MAP).length.toLocaleString('id-ID') + '</b> Task Force terdaftar dengan NIP. NIP yang diketik akan otomatis diingat di HP ini untuk pembukaan berikutnya.';
+elHint.innerHTML = 'Total <b>' + Object.keys(NIP_MAP).length.toLocaleString('id-ID') + '</b> Task Force terdaftar dengan NIP.';
 const savedNip = loadSavedNip();
 if (savedNip){ elInput.value = savedNip; doSearch(); }
 else { renderEmpty(); }
 }catch(err){
 setStatus('err', 'Gagal memuat data');
-elResult.innerHTML = '<div class="load-error">Gagal mengambil data dari Google Sheets.<br>Penyebab: ' + escapeHtml(err.message) + '<br><br>Coba klik "↻ Refresh data" di atas, atau periksa apakah link publish CSV masih aktif.</div>';
+elResult.innerHTML = '<div class="load-error">Gagal mengambil data: ' + escapeHtml(err.message) + '</div>';
 }
 }
-
 function renderEmpty(){
-elResult.innerHTML = `
-<div class="empty-state">
-<span class="glyph">[ ? ]</span>
-<p>Belum ada NIP yang dicari.</p>
-<p>Masukkan NIP Task Force di kotak atas untuk menampilkan tim PML dan PPL terkait.</p>
-</div>`;
+elResult.innerHTML = '<div class="empty-state"><span class="glyph">[ ? ]</span><p>Belum ada NIP yang dicari.</p></div>';
 }
 function renderNotFound(nip){
-elResult.innerHTML = `<div class="not-found">NIP "${escapeHtml(nip)}" tidak ditemukan pada daftar NIP Task Force.</div>`;
+elResult.innerHTML = '<div class="not-found">NIP "' + escapeHtml(nip) + '" tidak ditemukan.</div>';
 }
-
 function renderResult(nip, tfName){
 const tfNameNorm = tfName.trim();
 const teamRows = DATA.filter(r => r.tf.trim().toUpperCase() === tfNameNorm.toUpperCase());
 if (teamRows.length === 0){
-elResult.innerHTML = `<div class="not-found">Task Force "${escapeHtml(tfName)}" ditemukan, namun tidak ada data PML/PPL yang cocok pada data saat ini.</div>`;
+elResult.innerHTML = '<div class="not-found">Task Force tidak ada datanya.</div>';
 return;
 }
 const kec = teamRows[0].kec;
@@ -361,7 +338,6 @@ const totalDraft = teamRows.reduce((s,r)=> s + (r.draft||0), 0);
 const avgPersen = totalTarget > 0 ? (totalKirim/totalTarget*100) : 0;
 const pmlGroups = {};
 teamRows.forEach(r => { (pmlGroups[r.pml] = pmlGroups[r.pml] || []).push(r); });
-
 const pmlCardsHtml = Object.entries(pmlGroups).map(([pmlName, pplRows], idx) => {
 const pmlTarget = pplRows.reduce((s,r)=> s + (r.target||0), 0);
 const pmlKirim = pplRows.reduce((s,r)=> s + (r.kirim||0), 0);
@@ -371,7 +347,6 @@ pplRows.forEach(r => {
 if (!pplGroups[r.ppl]) pplGroups[r.ppl] = [];
 pplGroups[r.ppl].push(r);
 });
-
 const rowsHtml = Object.entries(pplGroups).map(([pplName, idsubRows]) => {
 const pplTarget = idsubRows.reduce((s,r) => s + (r.target||0), 0);
 const pplKirim = idsubRows.reduce((s,r) => s + (r.kirim||0), 0);
@@ -379,11 +354,9 @@ const pplDraft = idsubRows.reduce((s,r) => s + (r.draft||0), 0);
 const pplRata = idsubRows.reduce((s,r) => s + (r.rata||0), 0);
 const pplPersen = pplTarget > 0 ? (pplKirim / pplTarget * 100) : 0;
 const pctClass = pplPersen < 2 ? 'low' : '';
-
 const idsubRowsHtml = idsubRows.map(r => {
 const pct = r.target > 0 ? (r.kirim / r.target * 100) : 0;
 const pctClassSub = pct < 2 ? 'low' : '';
-
 let gcKeterangan = '<span style="color:#aaa;">-</span>';
 const lookupKey = String(r.idsubsls || '').trim();
 const gcVal = gcMap[lookupKey] !== undefined ? String(gcMap[lookupKey]).trim() : '';
@@ -394,108 +367,13 @@ gcKeterangan = '<span class="gc-badge gc-0">0</span>';
 } else if (gcVal !== '') {
 gcKeterangan = escapeHtml(gcVal);
 }
-return `
-<tr>
-<td>${escapeHtml(r.idsubsls)}</td>
-<td>${gcKeterangan}</td>
-<td class="num">${fmt(r.target)}</td>
-<td class="num">${fmt(r.kirim)}</td>
-<td class="num">${fmt(r.draft)}</td>
-<td class="num">${fmtDec(r.rata)}</td>
-<td class="num">
-<div class="pct-bar-cell">
-<span>${fmtPct(pct)}</span>
-<span class="pct-track"><span class="pct-fill ${pctClassSub}" style="width:${Math.min(pct,100)}%"></span></span>
-</div>
-</td>
-</tr>`;
+return '<tr><td>' + escapeHtml(r.idsubsls) + '</td><td>' + gcKeterangan + '</td><td class="num">' + fmt(r.target) + '</td><td class="num">' + fmt(r.kirim) + '</td><td class="num">' + fmt(r.draft) + '</td><td class="num">' + fmtDec(r.rata) + '</td><td class="num"><div class="pct-bar-cell"><span>' + fmtPct(pct) + '</span><span class="pct-track"><span class="pct-fill ' + pctClassSub + '" style="width:' + Math.min(pct,100) + '%"></span></span></div></td></tr>';
 }).join('');
-
-return `
-<tr class="ppl-row-expandable">
-<td>
-<span class="chevron-small">▾</span> ${escapeHtml(pplName)} ${getUpdateBadge('ppl')}
-</td>
-<td class="num">${fmt(pplTarget)}</td>
-<td class="num">${fmt(pplKirim)}</td>
-<td class="num">${fmt(pplDraft)}</td>
-<td class="num">${fmtDec(pplRata)}</td>
-<td class="num">
-<div class="pct-bar-cell">
-<span>${fmtPct(pplPersen)}</span>
-<span class="pct-track"><span class="pct-fill ${pctClass}" style="width:${Math.min(pplPersen,100)}%"></span></span>
-</div>
-</td>
-</tr>
-<tr class="ppl-detail-row" style="display:none;">
-<td colspan="6" style="padding: 0 12px 12px 12px; background: #fbfaf6;">
-<table class="idsubsls-table">
-<thead>
-<tr>
-<th>ID SUBSLS</th>
-<th>Ket. GC</th>
-<th class="num">Target</th>
-<th class="num">Dikirim</th>
-<th class="num">Draft</th>
-<th class="num">Rata²/Hari</th>
-<th class="num">Persentase</th>
-</tr>
-</thead>
-<tbody>${idsubRowsHtml}</tbody>
-</table>
-</td>
-</tr>
-`;
+return '<tr class="ppl-row-expandable"><td><span class="chevron-small">▾</span> ' + escapeHtml(pplName) + ' ' + getUpdateBadge('ppl') + '</td><td class="num">' + fmt(pplTarget) + '</td><td class="num">' + fmt(pplKirim) + '</td><td class="num">' + fmt(pplDraft) + '</td><td class="num">' + fmtDec(pplRata) + '</td><td class="num"><div class="pct-bar-cell"><span>' + fmtPct(pplPersen) + '</span><span class="pct-track"><span class="pct-fill ' + pctClass + '" style="width:' + Math.min(pplPersen,100) + '%"></span></span></div></td></tr><tr class="ppl-detail-row" style="display:none;"><td colspan="6" style="padding: 0 12px 12px 12px; background: #fbfaf6;"><table class="idsubsls-table"><thead><tr><th>ID SUBSLS</th><th>Ket. GC</th><th class="num">Target</th><th class="num">Dikirim</th><th class="num">Draft</th><th class="num">Rata²/Hari</th><th class="num">Persentase</th></tr></thead><tbody>' + idsubRowsHtml + '</tbody></table></td></tr>';
 }).join('');
-
-return `
-<div class="pml-card" data-idx="${idx}">
-<div class="pml-card-top">
-<div class="pml-name-block">
-<p class="pml-name">${escapeHtml(pmlName)} ${getUpdateBadge('pml')}</p>
-<div class="pml-meta">
-<span><b>${Object.keys(pplGroups).length}</b> PPL</span>
-<span>Progress: <b>${fmtPct(pmlPersen)}</b></span>
-</div>
-</div>
-<div class="pml-mini-stats">
-<div class="mini-stat"><span class="num">${fmt(pmlTarget)}</span><span class="lbl">Target</span></div>
-<div class="mini-stat"><span class="num">${fmt(pmlKirim)}</span><span class="lbl">Dikirim</span></div>
-</div>
-<div class="chevron">▾</div>
-</div>
-<div class="detail-wrap">
-<div class="detail-inner">
-<table class="ppl-table">
-<caption>Seluruh PPL di bawah ${escapeHtml(pmlName)} <span style="font-size:9px; text-transform:none; letter-spacing:0;">(Klik baris PPL untuk melihat detail idsubsls)</span></caption>
-<thead>
-<tr>
-<th>PPL</th><th class="num">Target</th><th class="num">Dikirim</th>
-<th class="num">Draft</th><th class="num">Rata²/Hari</th><th class="num">Persentase</th>
-</tr>
-</thead>
-<tbody>${rowsHtml}</tbody>
-</table>
-</div>
-</div>
-</div>`;
+return '<div class="pml-card" data-idx="' + idx + '"><div class="pml-card-top"><div class="pml-name-block"><p class="pml-name">' + escapeHtml(pmlName) + ' ' + getUpdateBadge('pml') + '</p><div class="pml-meta"><span><b>' + Object.keys(pplGroups).length + '</b> PPL</span><span>Progress: <b>' + fmtPct(pmlPersen) + '</b></span></div></div><div class="pml-mini-stats"><div class="mini-stat"><span class="num">' + fmt(pmlTarget) + '</span><span class="lbl">Target</span></div><div class="mini-stat"><span class="num">' + fmt(pmlKirim) + '</span><span class="lbl">Dikirim</span></div></div><div class="chevron">▾</div></div><div class="detail-wrap"><div class="detail-inner"><table class="ppl-table"><caption>Seluruh PPL di bawah ' + escapeHtml(pmlName) + '</caption><thead><tr><th>PPL</th><th class="num">Target</th><th class="num">Dikirim</th><th class="num">Draft</th><th class="num">Rata²/Hari</th><th class="num">Persentase</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div></div></div>';
 }).join('');
-
-elResult.innerHTML = `
-<div class="tf-header">
-<div class="tf-id">${escapeHtml(kec)} · NIP ${escapeHtml(nip)}</div>
-<p class="tf-name">${escapeHtml(tfNameNorm)} ${getUpdateBadge('tf')}</p>
-<div class="tf-stats">
-<div class="stat"><span class="num">${Object.keys(pmlGroups).length}</span><span class="lbl">PML</span></div>
-<div class="stat"><span class="num">${teamRows.length}</span><span class="lbl">Total PPL</span></div>
-<div class="stat"><span class="num">${fmt(totalTarget)}</span><span class="lbl">Target</span></div>
-<div class="stat"><span class="num">${fmt(totalKirim)}</span><span class="lbl">Dikirim</span></div>
-<div class="stat"><span class="num">${fmt(totalDraft)}</span><span class="lbl">Draft</span></div>
-<div class="stat"><span class="num">${fmtPct(avgPersen)}</span><span class="lbl">Progress</span></div>
-</div>
-</div>
-<div class="pml-list">${pmlCardsHtml}</div>`;
-
+elResult.innerHTML = '<div class="tf-header"><div class="tf-id">' + escapeHtml(kec) + ' · NIP ' + escapeHtml(nip) + '</div><p class="tf-name">' + escapeHtml(tfNameNorm) + ' ' + getUpdateBadge('tf') + '</p><div class="tf-stats"><div class="stat"><span class="num">' + Object.keys(pmlGroups).length + '</span><span class="lbl">PML</span></div><div class="stat"><span class="num">' + teamRows.length + '</span><span class="lbl">Total PPL</span></div><div class="stat"><span class="num">' + fmt(totalTarget) + '</span><span class="lbl">Target</span></div><div class="stat"><span class="num">' + fmt(totalKirim) + '</span><span class="lbl">Dikirim</span></div><div class="stat"><span class="num">' + fmt(totalDraft) + '</span><span class="lbl">Draft</span></div><div class="stat"><span class="num">' + fmtPct(avgPersen) + '</span><span class="lbl">Progress</span></div></div></div><div class="pml-list">' + pmlCardsHtml + '</div>';
 document.querySelectorAll('.pml-card').forEach(card => {
 const top = card.querySelector('.pml-card-top');
 const detail = card.querySelector('.detail-wrap');
@@ -504,7 +382,6 @@ const isOpen = card.classList.toggle('open');
 detail.classList.toggle('open', isOpen);
 });
 });
-
 document.querySelectorAll('.ppl-row-expandable').forEach(row => {
 row.addEventListener('click', (e) => {
 const detailRow = row.nextElementSibling;
@@ -515,10 +392,8 @@ row.classList.toggle('open', isHidden);
 }
 });
 });
-
 refreshUpdateBadges();
 }
-
 function doSearch(){
 const raw = elInput.value.trim();
 if (!raw){ renderEmpty(); return; }
@@ -532,13 +407,11 @@ try{ if (nip){ localStorage.setItem(STORAGE_KEY, nip); } else { localStorage.rem
 function loadSavedNip(){
 try{ return localStorage.getItem(STORAGE_KEY) || ''; }catch(e){ return ''; }
 }
-
 elInput.addEventListener('input', () => { doSearch(); saveNip(elInput.value.trim()); });
 elClear.addEventListener('click', () => { elInput.value=''; elInput.focus(); renderEmpty(); saveNip(''); });
 elRefreshBtn.addEventListener('click', () => {
 loadGCData().finally(() => loadData());
 });
-
 loadGCData().finally(() => loadData());
 </script>
 </body>
